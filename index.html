@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#00d9ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 <title>SiteRisk AI - Construction Disaster Analysis</title>
+<link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -15,6 +20,7 @@ body {
   background: #000;
   color: #fff;
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -27,6 +33,7 @@ body {
   box-shadow: 0 8px 32px rgba(0, 217, 255, 0.2);
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .header::before {
@@ -127,6 +134,7 @@ body {
   font-size: 15px;
   outline: none;
   transition: all 0.3s;
+  min-height: 44px;
 }
 
 .input-group input:focus {
@@ -149,6 +157,7 @@ body {
   box-shadow: 0 8px 24px rgba(0, 119, 255, 0.4);
   position: relative;
   overflow: hidden;
+  min-height: 48px;
 }
 
 .btn::before {
@@ -378,9 +387,67 @@ body {
   100% { transform: rotate(360deg); }
 }
 
+.locate-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00d9ff 0%, #0077ff 100%);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 217, 255, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.locate-btn:hover {
+  transform: scale(1.1) rotate(15deg);
+  box-shadow: 0 6px 25px rgba(0, 217, 255, 0.7);
+}
+
+.locate-btn:active {
+  transform: scale(0.95);
+}
+
 @media (max-width: 768px) {
   .container { flex-direction: column; }
-  .sidebar { width: 100%; max-height: 50vh; }
+  .sidebar {
+    width: 100%;
+    max-height: 50dvh;
+    border-left: none;
+    border-top: 3px solid #00d9ff;
+    padding: 20px;
+  }
+  .header {
+    padding: 15px 20px;
+  }
+  .header h1 {
+    font-size: 24px;
+  }
+  .header p {
+    font-size: 12px;
+  }
+  .risk-score h2 {
+    font-size: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    max-height: none;
+    flex: 1;
+  }
+  #map {
+    flex: none;
+    height: 35dvh;
+  }
 }
 </style>
 </head>
@@ -391,16 +458,26 @@ body {
   <p>AI-Powered Disaster Intelligence for Construction Sites</p>
 </div>
 
-<div class="container">
+<div class="container" style="position: relative;">
   <div id="map"></div>
+  <button class="locate-btn" id="locateBtn" title="Locate My Current Site">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+      <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
+    </svg>
+  </button>
   
   <div class="sidebar">
     <div class="input-group">
-      <label>🎯 Project Site Address</label>
+      <label>📍 Project Site Address</label>
       <input type="text" id="addressInput" placeholder="e.g., 123 Market St, San Francisco, CA">
     </div>
     
-    <button class="btn" id="analyzeBtn">🔍 Analyze Risk Profile</button>
+    <button class="btn" id="analyzeBtn">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="vertical-align: middle; margin-right: 8px;">
+        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+      </svg>
+      Analyze Risk Profile
+    </button>
     
     <div class="risk-panel" id="riskPanel">
       <div class="risk-score" id="riskScore">
@@ -438,7 +515,57 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
 let currentMarker = null;
 let riskLayers = [];
 
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.log('Service Worker registration failed', err));
+  });
+}
+
 document.getElementById('analyzeBtn').addEventListener('click', analyzeSite);
+
+// Locate Me Functionality
+document.getElementById('locateBtn').addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    alert('Geolocation is not supported by your browser');
+    return;
+  }
+
+  const btn = document.getElementById('locateBtn');
+  const originalContent = btn.innerHTML;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" class="spinner"><path d="M12 4V2C6.48 2 2 6.48 2 12h2c0-4.41 3.59-8 8-8zm0 16v2c5.52 0 10-4.48 10-10h-2c0 4.41-3.59 8-8 8z"/></svg>';
+  btn.style.animation = 'spin 1s linear infinite';
+
+  navigator.geolocation.getCurrentPosition(async (position) => {
+    btn.style.animation = '';
+    btn.innerHTML = originalContent;
+    const { latitude, longitude } = position.coords;
+
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+      const data = await res.json();
+      if (data.display_name) {
+        document.getElementById('addressInput').value = data.display_name;
+        analyzeSite();
+      } else {
+        document.getElementById('addressInput').value = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+        analyzeSite();
+      }
+    } catch (e) {
+      document.getElementById('addressInput').value = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+      analyzeSite();
+    }
+  }, (error) => {
+    btn.style.animation = '';
+    btn.innerHTML = originalContent;
+    alert('Unable to retrieve your location');
+  }, { enableHighAccuracy: true });
+});
+
+// Handle resizing (orientation changes)
+window.addEventListener('resize', () => {
+  setTimeout(() => map.invalidateSize(), 200);
+});
 
 async function analyzeSite() {
   const address = document.getElementById('addressInput').value.trim();
