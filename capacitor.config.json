@@ -1,5 +1,5 @@
 {
   "appId": "com.siterisk.pro",
   "appName": "SiteRisk Pro",
-  "webDir": "."
+  "webDir": "www"
 }

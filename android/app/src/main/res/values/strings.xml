@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SiteRisk Pro</string>
+    <string name="title_activity_main">SiteRisk Pro</string>
+    <string name="package_name">com.siterisk.pro</string>
+    <string name="custom_url_scheme">com.siterisk.pro</string>
+</resources>
